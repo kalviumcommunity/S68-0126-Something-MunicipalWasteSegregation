@@ -1,90 +1,116 @@
-# WasteWise - Municipal Waste Segregation System
-
-A community-driven platform for tracking and improving municipal waste management through collaborative efforts between households, waste collectors, and municipal authorities.
-
-## Problem Statement
-
-Ineffective municipal waste management due to the lack of tracking and accountability for waste segregation at the source. This system enables real-time monitoring, issue reporting, and data-driven decision making.
-
-## Project Structure
-
 ```
-web/
-├── app/
-│   ├── page.tsx                    # Landing page (SSG)
-│   ├── layout.tsx                  # Root layout
-│   ├── about/page.tsx              # About page (SSG)
-│   ├── education/page.tsx          # Educational content (SSG)
-│   ├── faq/page.tsx                # FAQ page (SSG)
-│   ├── dashboard/
-│   │   ├── page.tsx                # Dashboard selector (SSR)
-│   │   ├── household/page.tsx      # Household dashboard (SSR)
-│   │   ├── collector/page.tsx      # Collector validation (SSR)
-│   │   ├── authority/page.tsx      # Authority dashboard (SSR)
-│   │   └── reports/page.tsx        # Issue reporting (SSR)
-│   └── statistics/
-│       ├── page.tsx                # Ward statistics (ISR - 5 min)
-│       ├── leaderboard/page.tsx    # Community leaderboard (ISR - 10 min)
-│       └── events/page.tsx         # Events & drives (ISR - 1 hour)
-```
+## 📘 Assignment / Learning Unit  
+### [Concept-1] Advanced Data Fetching: Static, Dynamic, and Hybrid Rendering in the App Router
 
-## Rendering Strategies
+### How does choosing between static, dynamic, and hybrid rendering affect performance, scalability, and data freshness in a Next.js application?
 
-### Static Rendering (SSG)
-**Best for:** Content that doesn't change frequently and doesn't depend on user-specific data.
+Choosing the correct rendering strategy directly impacts how fast pages load, how well the system scales with traffic, and how fresh the displayed data is. In **WasteWise**, each rendering mode is used deliberately based on the nature of the data and user expectations.
 
-| Page | Purpose |
-|------|---------|
-| `/` | Landing page with program overview |
-| `/about` | About the initiative |
-| `/education` | Waste segregation guidelines |
-| `/faq` | Frequently asked questions |
+---
 
-**Benefits:** Fast load times, SEO-optimized, cached at CDN edge.
+### Rendering Trade-offs with Examples from WasteWise
 
-### Dynamic Rendering (SSR)
-**Best for:** Real-time, user-specific, or frequently changing data.
+#### Static Rendering (SSG)
+**Impact:**
+- **Performance:** Excellent (served from CDN as pre-built HTML)
+- **Scalability:** Very high (no server computation per request)
+- **Data Freshness:** Low (data updates only on rebuild)
 
-| Page | Purpose |
-|------|---------|
-| `/dashboard` | Role selection dashboard |
-| `/dashboard/household` | Household segregation scores |
-| `/dashboard/collector` | Collector validation screens |
-| `/dashboard/authority` | Live reports and heatmaps |
-| `/dashboard/reports` | Community issue feeds |
+**Used in WasteWise for:**
+- Landing page (`/`)
+- About (`/about`)
+- Education (`/education`)
+- FAQ (`/faq`)
 
-**Implementation:** Uses `export const dynamic = "force-dynamic"` to ensure fresh data on every request.
+**Justification:**  
+These pages contain informational and educational content that rarely changes and does not depend on user identity. Static rendering ensures fast access for all users while minimizing server load.
 
-### Hybrid Rendering (ISR)
-**Best for:** Data that should be periodically refreshed without requiring real-time updates.
+---
 
-| Page | Revalidation | Purpose |
-|------|--------------|---------|
-| `/statistics` | 5 minutes | Ward-level segregation statistics |
-| `/statistics/leaderboard` | 10 minutes | Community rankings |
-| `/statistics/events` | 1 hour | Awareness drives and events |
+#### Dynamic Rendering (SSR)
+**Impact:**
+- **Performance:** Moderate (computed per request)
+- **Scalability:** Lower than SSG (depends on server capacity)
+- **Data Freshness:** Real-time
 
-**Implementation:** Uses `export const revalidate = <seconds>` for periodic regeneration.
+**Used in WasteWise for:**
+- Household dashboards (`/dashboard/household`)
+- Collector validation (`/dashboard/collector`)
+- Authority dashboards (`/dashboard/authority`)
+- Community issue reporting (`/dashboard/reports`)
 
-## Getting Started
+**Justification:**  
+These pages display live, user-specific data such as segregation scores, validation logs, and reports. Real-time accuracy is critical, so dynamic rendering is enforced using:
 
-```bash
-cd web
-npm install
-npm run dev
+```ts
+export const dynamic = "force-dynamic";
+````
+
+---
+
+#### Hybrid Rendering (ISR)
+
+**Impact:**
+
+* **Performance:** Near-static
+* **Scalability:** High
+* **Data Freshness:** Periodic and predictable
+
+**Used in WasteWise for:**
+
+* Ward statistics (`/statistics`) – revalidated every 5 minutes
+* Community leaderboard (`/statistics/leaderboard`) – revalidated every 10 minutes
+* Events and drives (`/statistics/events`) – revalidated every 1 hour
+
+**Justification:**
+These pages need to reflect recent progress but do not require real-time updates. Incremental Static Regeneration provides a balance between freshness and performance using:
+
+```ts
+export const revalidate = <seconds>;
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+---
 
-## 👥 Stakeholders
+## Case Study: “The News Portal That Felt Outdated”
 
-- **Households:** Track segregation scores, report issues, earn recognition
-- **Waste Collectors:** Validate segregation quality, manage routes
-- **Municipal Authorities:** Access analytics, heatmaps, and performance data
+**Scenario:**
+At DailyEdge, the homepage is statically generated for speed, but the “Breaking News” section becomes outdated. Switching the entire site to server-side rendering fixed freshness issues but caused slower load times and increased infrastructure costs.
 
-## 🛠️ Tech Stack
+---
 
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **React:** v19
+### Trade-off Analysis
+
+| Strategy      | Pros                  | Cons                    |
+| ------------- | --------------------- | ----------------------- |
+| Static (SSG)  | Fast, cheap, scalable | Can become stale        |
+| Dynamic (SSR) | Always fresh          | Slower, expensive       |
+| Hybrid (ISR)  | Balanced approach     | Slight delay in updates |
+
+---
+
+### Balanced Solution Using Next.js App Router
+
+A better approach would be:
+
+* **Static Rendering** for evergreen content (editorials, categories, static pages)
+* **Hybrid Rendering (ISR)** for the homepage and breaking news sections with short revalidation intervals (e.g., 30–60 seconds)
+* **Dynamic Rendering** for personalized content such as user feeds or saved articles
+
+Using App Router features:
+
+* `revalidate` to keep headlines fresh without full SSR
+* `cache: 'no-store'` or `dynamic = "force-dynamic"` for truly live sections
+* Default static caching for content that doesn’t change often
+
+---
+
+### Applying This Logic to WasteWise
+
+The same decision-making framework is used in WasteWise:
+
+* **News Feed Equivalent:** Community reports → Dynamic Rendering
+* **User Dashboard Equivalent:** Household and authority dashboards → Dynamic Rendering
+* **Product Catalog Equivalent:** Ward statistics and leaderboards → Hybrid Rendering
+* **Marketing Pages:** Awareness and education pages → Static Rendering
+
+```
