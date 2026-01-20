@@ -1,4 +1,3 @@
-```
 ## 📘 Assignment / Learning Unit  
 ### [Concept-1] Advanced Data Fetching: Static, Dynamic, and Hybrid Rendering in the App Router
 
@@ -112,5 +111,3 @@ The same decision-making framework is used in WasteWise:
 * **User Dashboard Equivalent:** Household and authority dashboards → Dynamic Rendering
 * **Product Catalog Equivalent:** Ward statistics and leaderboards → Hybrid Rendering
 * **Marketing Pages:** Awareness and education pages → Static Rendering
-
-```
