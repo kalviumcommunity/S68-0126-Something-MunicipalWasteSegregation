@@ -44,18 +44,15 @@ jobs:
         working-directory: web
         run: |
           if [ -f .env.${{ steps.env.outputs.environment }} ]; then
-            cat .env.${{ steps.env.outputs.environment }} >> $GITHUB_ENV
+            # Load env vars but filter out NODE_ENV to avoid Next.js warnings
+            grep -v "^NODE_ENV=" .env.${{ steps.env.outputs.environment }} >> $GITHUB_ENV || true
           fi
       
       - name: Build (${{ steps.env.outputs.environment }})
         working-directory: web
         run: npm run build:${{ steps.env.outputs.environment }}
-        env:
-          NODE_ENV: ${{ steps.env.outputs.environment }}
-          # Add sensitive environment variables from secrets here:
-          # DATABASE_URL: ${{ secrets.DB_URL_${{ steps.env.outputs.environment }} }}
-          # API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
-          # JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        # Note: Don't set NODE_ENV here - Next.js builds should use production mode
+        # The environment-specific .env files handle app-level config
       
       - name: Lint
         working-directory: web
