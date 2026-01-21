@@ -1,0 +1,67 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - Dev
+  pull_request:
+    branches:
+      - main
+      - staging
+      - Dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd web && npm ci
+      
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          else
+            echo "environment=development" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Load environment variables
+        working-directory: web
+        run: |
+          if [ -f .env.${{ steps.env.outputs.environment }} ]; then
+            cat .env.${{ steps.env.outputs.environment }} >> $GITHUB_ENV
+          fi
+      
+      - name: Build (${{ steps.env.outputs.environment }})
+        working-directory: web
+        run: npm run build:${{ steps.env.outputs.environment }}
+        env:
+          NODE_ENV: ${{ steps.env.outputs.environment }}
+          # Add sensitive environment variables from secrets here:
+          # DATABASE_URL: ${{ secrets.DB_URL_${{ steps.env.outputs.environment }} }}
+          # API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
+          # JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+      
+      # Add deployment steps here based on your infrastructure
+      # - name: Deploy to ${{ steps.env.outputs.environment }}
+      #   run: |
+      #     # Your deployment commands here
