@@ -1,0 +1,45 @@
+# Track environment template files (must come before ignore patterns)
+!.env.example
+!.env.local.example
+!web/.env.example
+!web/.env.local.example
+
+# Environment files - never commit secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Testing
+.coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
